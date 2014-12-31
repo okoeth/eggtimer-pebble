@@ -1,9 +1,158 @@
+////////////////////////////////////////////////////////////
+// Egg timer based on the following formula of 
+// Charles D. H. Williams
+//
+// duration = 0,465 * weight ^ 2/3 * ln (0,76 * ( (t_water - t_start) / (t_water - t_end) ) )
+//
+// t_water = 100 °C - (1 °C * height / 285m)
+// t_start =   4 °C (freezer) ... 20 °C (room temperature)
+// t_end   =  62 °C (soft)    ... 82 °C (hard)
+//
+
+// export PEBBLE_PHONE=192.168.42.152
+
 #include "pebble.h"
+
+// LN of 1.20 => 4.40 in steps of 0.1 times 1000
+uint32_t lookup1 [] = {
+  182,
+  262,
+  336,
+  405,
+  470,
+  531,
+  588,
+  642,
+  693,
+  742,
+  788,
+  833,
+  875,
+  916,
+  956,
+  993,
+  1030,
+  1065,
+  1099,
+  1131,
+  1163,
+  1194,
+  1224,
+  1253,
+  1281,
+  1308,
+  1335,
+  1361,
+  1386,
+  1411,
+  1435,
+  1459,
+  1482
+};
+
+// x^3/2 of 80 => 200
+uint32_t lookup2 [] = {
+  19,
+  20,
+  22,
+  23,
+  24,
+  26,
+  27,
+  28,
+  29,
+  31,
+  32,
+  33,
+  34
+};
 
 #define NUM_MENU_SECTIONS 2
 #define NUM_MENU_ICONS 3
 #define NUM_FIRST_MENU_ITEMS 1
 #define NUM_SECOND_MENU_ITEMS 2
+
+////////////////////////////////////////////////////////////
+// Data structure
+
+struct configuration {
+  char     title[32]; 
+  char     subtitle[32];
+  uint32_t  height;   //  m, Maisach: 512m
+  uint32_t  weight;   //  g, S/M/L: 120g/140g/160g 
+  uint32_t  t_start;  // °C, 4°C 
+  uint32_t  t_end;    // °C, S/M/H: 62°C/72°C/82°C
+};
+
+struct configuration data [9] = {
+  { "Soft",   "512m / 120g / 7°C", 512, 120, 7, 62},
+  { "Soft",   "512m / 140g / 7°C", 512, 140, 7, 62},
+  { "Soft",   "512m / 160g / 7°C", 512, 160, 7, 62},
+  { "Medium", "512m / 120g / 7°C", 512, 120, 7, 72},
+  { "Medium", "512m / 140g / 7°C", 512, 140, 7, 72},
+  { "Medium", "512m / 160g / 7°C", 512, 160, 7, 72},
+  { "Hard",   "512m / 120g / 7°C", 512, 120, 7, 82},
+  { "Hard",   "512m / 140g / 7°C", 512, 140, 7, 82},
+  { "Hard",   "512m / 160g / 7°C", 512, 160, 7, 82},
+};
+
+////////////////////////////////////////////////////////////
+// Calculation
+
+uint32_t calculate_in_min_times_1000(struct configuration data_p) {
+  // Part   I: p1 = ((t_water - t_start) * 100 ) / (t_water - t_end)
+  uint32_t p1_1 = (100 * 100 - ((data_p.height * 100) / 285) ) - (data_p.t_start * 100);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p1_1 %lu", p1_1);
+  uint32_t p1 = p1_1 * 100 / ((100 * 100 - ((data_p.height * 100) / 285) ) - (data_p.t_end * 100) ); 
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p1 %lu", p1);
+
+  // Part  II: p2 = (0,76 * 100 * p1) 
+  uint32_t p2_1 = (760 * p1) / 10000; 
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p2_1 %lu", p2_1);
+  uint32_t p2 = 0;
+  if (p2_1 < 12) {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p2_1 %lu", p2_1);
+    p2 = 12-12;
+  } else if (p2_1 > 44) {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p2_1 %lu", p2_1);
+    p2 = 44-12;
+  } else {
+    p2 = p2_1 - 12;
+  }
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p2 %lu", p2);
+
+  // Part III: p3 = lookup1(p2)  
+  uint32_t p3 = lookup1[p2];
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p3 %lu", p3);
+
+  // Part  IV: p4 = lookup2( (weight - 80) / 10)
+  uint32_t p4_1 = (data_p.weight / 10);
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4_1 %lu", p4_1);
+
+  uint32_t p4_2 = 0;
+  if (p4_1 < 8) {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p4_1 %lu below lowest lookup", p4_1);
+    p4_2 = 8-8;
+  } else if (p2_1 > 44) {
+    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p4_1 %lu above highest lookup", p4_1);
+    p4_2 = 20-8;
+  } else {
+    p4_2 = p4_1 - 8;
+  }
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4_2 %lu", p4_2);
+
+  uint32_t p4 = lookup2[p4_2];
+  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4 %lu", p4);
+
+  // Part   V: p5 = 0,465 * 100 * p4 * p3 / 1000
+  uint32_t p5 = (465 * p4 * p3) / 1000;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p5 %lu", p5);
+
+  return p5;
+}
+
+////////////////////////////////////////////////////////////
+// Menu window
 
 static Window *window;
 
@@ -145,6 +294,10 @@ void window_unload(Window *window) {
 }
 
 int main(void) {
+  for (int i = 0; i < 9; i++) {
+    calculate_in_min_times_1000(data[i]);
+  }
+
   window = window_create();
 
   // Setup the window handlers
