@@ -1,0 +1,19 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "koeth@acm.org",
+    "longName": "EggTimer",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "shortName": "EggTimer",
+    "uuid": "3361ece2-a226-462e-8da0-fdee4d38d3fb",
+    "versionCode": 1,
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
