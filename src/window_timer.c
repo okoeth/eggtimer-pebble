@@ -113,7 +113,7 @@ static void window_unload(Window *pwnd_p) {
 
 
 ////////////////////////////////////////////////////////////
-// Create window
+// Create timer window
 
 void window_timer_create(uint32_t u32DurationMillies_p) {
   // Set-up timer
