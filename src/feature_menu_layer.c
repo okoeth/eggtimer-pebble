@@ -9,152 +9,43 @@
 // t_end   =  62 °C (soft)    ... 82 °C (hard)
 //
 
+// TODO: Rename to main.c
+
 // export PEBBLE_PHONE=192.168.42.152
 
 #include "pebble.h"
+#include "data.h"
+#include "calculate.h"
 
-// LN of 1.20 => 4.40 in steps of 0.1 times 1000
-uint32_t lookup1 [] = {
-  182,
-  262,
-  336,
-  405,
-  470,
-  531,
-  588,
-  642,
-  693,
-  742,
-  788,
-  833,
-  875,
-  916,
-  956,
-  993,
-  1030,
-  1065,
-  1099,
-  1131,
-  1163,
-  1194,
-  1224,
-  1253,
-  1281,
-  1308,
-  1335,
-  1361,
-  1386,
-  1411,
-  1435,
-  1459,
-  1482
-};
+#include "window_timer.h"
 
-// x^3/2 of 80 => 200
-uint32_t lookup2 [] = {
-  19,
-  20,
-  22,
-  23,
-  24,
-  26,
-  27,
-  28,
-  29,
-  31,
-  32,
-  33,
-  34
-};
-
-#define NUM_MENU_SECTIONS 2
-#define NUM_MENU_ICONS 3
-#define NUM_FIRST_MENU_ITEMS 1
-#define NUM_SECOND_MENU_ITEMS 2
+#define NUM_MENU_SECTIONS 1
 
 ////////////////////////////////////////////////////////////
 // Data structure
 
-struct configuration {
-  char     title[32]; 
-  char     subtitle[32];
-  uint32_t  height;   //  m, Maisach: 512m
-  uint32_t  weight;   //  g, S/M/L: 120g/140g/160g 
-  uint32_t  t_start;  // °C, 4°C 
-  uint32_t  t_end;    // °C, S/M/H: 62°C/72°C/82°C
+#define NUM_ENTRIES 9
+
+struct Configuration stData_g [NUM_ENTRIES] = {
+  { "Soft - Samll",    "512m / 120g / 9°C", 512, 120, 9, 62},
+  { "Soft - Medium",   "512m / 140g / 9°C", 512, 140, 9, 62},
+  { "Soft - Large",    "512m / 160g / 9°C", 512, 160, 9, 62},
+  { "Medium - Small",  "512m / 120g / 9°C", 512, 120, 9, 72},
+  { "Medium - Medium", "512m / 140g / 9°C", 512, 140, 9, 72},
+  { "Medium - Large",  "512m / 160g / 9°C", 512, 160, 9, 72},
+  { "Hard - Small",    "512m / 120g / 9°C", 512, 120, 9, 82},
+  { "Hard - Medium",   "512m / 140g / 9°C", 512, 140, 9, 82},
+  { "Hard - Large",    "512m / 160g / 9°C", 512, 160, 9, 82},
 };
 
-struct configuration data [9] = {
-  { "Soft",   "512m / 120g / 7°C", 512, 120, 7, 62},
-  { "Soft",   "512m / 140g / 7°C", 512, 140, 7, 62},
-  { "Soft",   "512m / 160g / 7°C", 512, 160, 7, 62},
-  { "Medium", "512m / 120g / 7°C", 512, 120, 7, 72},
-  { "Medium", "512m / 140g / 7°C", 512, 140, 7, 72},
-  { "Medium", "512m / 160g / 7°C", 512, 160, 7, 72},
-  { "Hard",   "512m / 120g / 7°C", 512, 120, 7, 82},
-  { "Hard",   "512m / 140g / 7°C", 512, 140, 7, 82},
-  { "Hard",   "512m / 160g / 7°C", 512, 160, 7, 82},
-};
 
-////////////////////////////////////////////////////////////
-// Calculation
+// 500 = 30sec
 
-uint32_t calculate_in_min_times_1000(struct configuration data_p) {
-  // Part   I: p1 = ((t_water - t_start) * 100 ) / (t_water - t_end)
-  uint32_t p1_1 = (100 * 100 - ((data_p.height * 100) / 285) ) - (data_p.t_start * 100);
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p1_1 %lu", p1_1);
-  uint32_t p1 = p1_1 * 100 / ((100 * 100 - ((data_p.height * 100) / 285) ) - (data_p.t_end * 100) ); 
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p1 %lu", p1);
-
-  // Part  II: p2 = (0,76 * 100 * p1) 
-  uint32_t p2_1 = (760 * p1) / 10000; 
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p2_1 %lu", p2_1);
-  uint32_t p2 = 0;
-  if (p2_1 < 12) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p2_1 %lu", p2_1);
-    p2 = 12-12;
-  } else if (p2_1 > 44) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p2_1 %lu", p2_1);
-    p2 = 44-12;
-  } else {
-    p2 = p2_1 - 12;
-  }
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p2 %lu", p2);
-
-  // Part III: p3 = lookup1(p2)  
-  uint32_t p3 = lookup1[p2];
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p3 %lu", p3);
-
-  // Part  IV: p4 = lookup2( (weight - 80) / 10)
-  uint32_t p4_1 = (data_p.weight / 10);
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4_1 %lu", p4_1);
-
-  uint32_t p4_2 = 0;
-  if (p4_1 < 8) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p4_1 %lu below lowest lookup", p4_1);
-    p4_2 = 8-8;
-  } else if (p2_1 > 44) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p4_1 %lu above highest lookup", p4_1);
-    p4_2 = 20-8;
-  } else {
-    p4_2 = p4_1 - 8;
-  }
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4_2 %lu", p4_2);
-
-  uint32_t p4 = lookup2[p4_2];
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p4 %lu", p4);
-
-  // Part   V: p5 = 0,465 * 100 * p4 * p3 / 1000
-  uint32_t p5 = (465 * p4 * p3) / 1000;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub p5 %lu", p5);
-
-  return p5;
-}
 
 ////////////////////////////////////////////////////////////
 // Menu window
 
-static Window *window;
+static Window *menu_window;
 
 // This is a menu layer
 // You have more control than with a simple menu layer
@@ -171,10 +62,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
   switch (section_index) {
     case 0:
-      return NUM_FIRST_MENU_ITEMS;
-
-    case 1:
-      return NUM_SECOND_MENU_ITEMS;
+      return NUM_ENTRIES;
 
     default:
       return 0;
@@ -193,12 +81,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
   switch (section_index) {
     case 0:
       // Draw title text in the section header
-      menu_cell_basic_header_draw(ctx, cell_layer, "New Config");
-      break;
-
-    case 1:
       menu_cell_basic_header_draw(ctx, cell_layer, "Saved Configs");
       break;
+
   }
 }
 
@@ -208,60 +93,29 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   switch (cell_index->section) {
     case 0:
       // Use the row to specify which item we'll draw
-      switch (cell_index->row) {
-        case 0:
-          // This is a basic menu item with a title and subtitle
-          menu_cell_basic_draw(ctx, cell_layer, "New Config", "Create new config", NULL);
-          break;
-      }
+      menu_cell_basic_draw(ctx, cell_layer, stData_g[cell_index->row].szTitle, stData_g[cell_index->row].szSubtitle, NULL);
       break;
 
-    case 1:
-      switch (cell_index->row) {
-        case 0:
-          // There is title draw for something more simple than a basic menu item
-          menu_cell_basic_draw(ctx, cell_layer, "Soft egg", "120g, 300m", NULL);
-          break;
-        case 1:
-          // There is title draw for something more simple than a basic menu item
-          menu_cell_basic_draw(ctx, cell_layer, "Medium egg", "120g, 300m", NULL);
-          break;
-      }
-      break;
   }
 }
 
 // Here we capture when a user selects a menu item
-void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  uint32_t u32Duration = 0;
   // Select section
   switch (cell_index->section) {
-    case 0: // Section: New Config
-      // Select the row
-      switch (cell_index->row) {
-        // This is the menu item with the cycling icon
-        case 0: // New Config
-          // TODO: Implement creation of new config
-          break;
-      }
-      break; // Section: New Config
-        
-    case 1: // Section: Saved Configs
-      // Select the row
-      switch (cell_index->row) {
-        // This is the menu item with the cycling icon
-        case 0: // First saved
-          // TODO: Implement running timer
-          break;
-        case 1: // Second saved
-          // TODO: Implement running timer
-          break;
-      }
-      break; // Section: Saved Config
+    case 0: // Section: Saved config
+      u32Duration = calculate_in_ms(stData_g[cell_index->row]);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Run timer for %lu ms", u32Duration);
+
+      window_timer_create(u32Duration);
+
+      break; // Section: Saved config        
   }
 }
 
 // This initializes the menu upon window load
-void window_load(Window *window) {
+static void menu_window_load(Window *window) {
   // Now we prepare to initialize the menu layer
   // We need the bounds to specify the menu layer's viewport size
   // In this case, it'll be the same as the window's
@@ -288,27 +142,22 @@ void window_load(Window *window) {
   layer_add_child(window_layer, menu_layer_get_layer(menu_layer));
 }
 
-void window_unload(Window *window) {
+static void menu_window_unload(Window *window) {
   // Destroy the menu layer
   menu_layer_destroy(menu_layer);
 }
 
 int main(void) {
-  for (int i = 0; i < 9; i++) {
-    calculate_in_min_times_1000(data[i]);
-  }
+  menu_window = window_create();
 
-  window = window_create();
-
-  // Setup the window handlers
-  window_set_window_handlers(window, (WindowHandlers) {
-    .load = window_load,
-    .unload = window_unload,
+  window_set_window_handlers(menu_window, (WindowHandlers) {
+    .load = menu_window_load,
+    .unload = menu_window_unload,
   });
 
-  window_stack_push(window, true /* Animated */);
+  window_stack_push(menu_window, true /* Animated */);
 
   app_event_loop();
 
-  window_destroy(window);
+  window_destroy(menu_window);
 }
