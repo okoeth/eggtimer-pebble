@@ -13,6 +13,7 @@
 #include "calculate.h"
 #include "window_timer.h"
 #include "window_pop.h"
+#include "window_config.h"
 
 #define NUM_MENU_SECTIONS 2
 
@@ -23,6 +24,7 @@ static Window *pwndMenu_g;
 static MenuLayer *plyrMenu_g;
 static struct Data * pstData_g = NULL;
 static uint16_t u16DataRecords_g = 0;
+static struct Configuration stDefaultConfig_g = {"Soft - 120g", "500m / 9C / 62C", 500, 120, 9, 62};
 
 ////////////////////////////////////////////////////////////
 // Call back to tell menu number of sections
@@ -92,7 +94,8 @@ static void select_callback(MenuLayer *plyr_p, MenuIndex *pidxCell_p, void *pDat
   uint32_t u32Duration = 0;
   switch (pidxCell_p->section) {
     case 0: // First section
-      //window_config_create();
+      data_append_item(pstData_g, & stDefaultConfig_g); 
+      window_config_create(plyr_p, & (pstData_g->prgstConfig[pstData_g->u16NumConfigs-1]));
       break;
     case 1: // Second section
       u32Duration = calculate_in_ms(pstData_g->prgstConfig[pidxCell_p->row]);

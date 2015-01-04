@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////
-// Declaration of timer window module
+// Declaration of menu window module
 //
 
 #ifndef WINDOW_MENU_H_

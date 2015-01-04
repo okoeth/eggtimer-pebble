@@ -6,14 +6,59 @@
 
 #define MAX_DATA 32
 
+#define BASE_DATA_ID 1000
+#define COUNT_DATA_ID 900
+#define VERSION_DATA_ID 900
+
+#define VERSION_DATA 1
+
+void  configuration_set_values (struct Configuration * pstConfig_p, uint32_t u32Height_p, uint32_t u32Weight_p, uint32_t u32StartTemp_p, uint32_t u32EndTemp_p) {
+	if (pstConfig_p!=NULL) {
+		if (u32EndTemp_p <= 67) {
+			snprintf(pstConfig_p->szTitle, 32, "Soft - %lug", u32Weight_p);
+		}	
+		else if (u32EndTemp_p <= 77) {
+			snprintf(pstConfig_p->szTitle, 32, "Medium - %lug", u32Weight_p);
+		}
+		else {
+			snprintf(pstConfig_p->szTitle, 32, "Hard - %lug", u32Weight_p);
+		}
+		snprintf(pstConfig_p->szSubtitle, 32, "%lum / %luC / %luC", u32Height_p, u32StartTemp_p, u32EndTemp_p);
+	}
+}
+
+static void data_write_to_store (struct Data * pstData_p) {
+	persist_write_int(VERSION_DATA_ID, VERSION_DATA);
+	persist_write_int(COUNT_DATA_ID, pstData_p->u16NumConfigs);
+	for (int i = 0; i < pstData_p->u16NumConfigs; i++) {
+		persist_write_data(BASE_DATA_ID+i, & (pstData_p->prgstConfig[i]), sizeof(struct Configuration));
+	}
+} 
+
+static void data_read_from_store (struct Data * pstData_p) {
+	if (persist_exists(VERSION_DATA_ID)) {
+		// persist_read_int(VERSION_DATA_ID); -- currently not used
+	}
+	if (persist_exists(COUNT_DATA_ID)) {
+		pstData_p->u16NumConfigs = persist_read_int(COUNT_DATA_ID);
+		for (int i = 0; i < pstData_p->u16NumConfigs; i++) {
+			if (persist_exists(BASE_DATA_ID+i)) {
+				persist_read_data(BASE_DATA_ID+i, & (pstData_p->prgstConfig[i]), sizeof(struct Configuration));
+			}
+		}
+	}
+} 
+
 struct Data *  data_create () {
 	struct Data * pData = calloc(1, sizeof(struct Data));
 	pData->u16NumConfigs=0;
 	pData->prgstConfig=calloc(MAX_DATA, sizeof(struct Configuration));
+	data_read_from_store(pData);
 	return pData;
 }
 
 int16_t data_destroy (struct Data * pstData_p) {
+	data_write_to_store(pstData_p);
 	free(pstData_p->prgstConfig); 
 	free(pstData_p);
 	return DATA_RET_OK;

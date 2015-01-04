@@ -17,6 +17,8 @@ struct Configuration {
   uint32_t u32EndTemp;     // °C, S/M/H: 62°C/72°C/82°C
 };
 
+void configuration_set_values (struct Configuration * pstConfig_p, uint32_t u32Height_p, uint32_t u32Weight_p, uint32_t u32StartTemp_p, uint32_t u32EndTemp_p);
+
 struct Data {
   uint16_t u16NumConfigs;
   struct Configuration * prgstConfig;

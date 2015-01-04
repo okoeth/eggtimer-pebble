@@ -12,8 +12,7 @@
 // TODO: Rename to main.c
 
 // TODO: Functions
-// - Pop window
-// - Data CRUD
+// - Create window
 // - Persistence
 //
 
@@ -27,6 +26,7 @@
 ////////////////////////////////////////////////////////////
 // Data structure
 
+/*
 #define NUM_ENTRIES 9
 
 static struct Configuration rgstConfig_g [NUM_ENTRIES] = {
@@ -38,12 +38,19 @@ static struct Configuration rgstConfig_g [NUM_ENTRIES] = {
   { "Medium - Large",  "512m / 160g / 9C", 512, 160, 9, 72},
   { "Hard - Small",    "512m / 120g / 9C", 512, 120, 9, 82},
   { "Hard - Medium",   "512m / 140g / 9C", 512, 140, 9, 82},
-  { "Hard - Large",    "512m / 160g / 9C", 512, 160, 9, 82},
+  { "Hard - Large",    "512m / 160g / 9C", 512, 160, 9, 82}
+};
+*/
+
+#define NUM_ENTRIES 1
+
+static struct Configuration rgstConfig_g [1] = {
+  { "Hard - 140g",    "500m / 9C / 82C", 500, 140, 9, 82}
 };
 
 int main(void) {
   struct Data * pstData = data_create();
-  data_append_items(pstData, rgstConfig_g, NUM_ENTRIES);  
+  //data_append_items(pstData, rgstConfig_g, NUM_ENTRIES);  
   window_menu_create(pstData);
   app_event_loop();
   data_destroy(pstData);
