@@ -127,8 +127,7 @@ void down_click_handler(ClickRecognizerRef stRecognizer_p, void *pContext_p) {
   }
 }
 
-void select_long_click_handler(ClickRecognizerRef stRecognizer_p, void *pContext_p) {
-  //Window *pwnd = (Window *)pContext_p;
+void save_and_close () {
   configuration_set_values (
     pstConfig_g, 
     rgu32Height[option_layer_selected_index(plyrOptionHeight_g)],
@@ -141,10 +140,19 @@ void select_long_click_handler(ClickRecognizerRef stRecognizer_p, void *pContext
   menu_layer_reload_data(plyrParentMenu_g);
 }
 
+void back_click_handler(ClickRecognizerRef stRecognizer_p, void *pContext_p) {
+  save_and_close();
+}
+
+void select_long_click_handler(ClickRecognizerRef stRecognizer_p, void *pContext_p) {
+  save_and_close();
+}
+
 void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, (ClickHandler) up_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, (ClickHandler) select_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, (ClickHandler) down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_BACK, (ClickHandler) back_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 0, (ClickHandler) select_long_click_handler, NULL);
 }
 

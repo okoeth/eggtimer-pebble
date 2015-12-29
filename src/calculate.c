@@ -74,15 +74,20 @@ uint32_t rgu32Lookup2 [] = {
 // Calculation of timer (see above for formula)
 
 static uint32_t calculate_in_min_times_1000(struct Configuration stData_p) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Height %lu", stData_p.u32Height);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "StartTemp %lu", stData_p.u32StartTemp);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "EndTemp %lu", stData_p.u32EndTemp);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Weight %lu", stData_p.u32Weight);
+
   // Part   I: u32p1 = ((t_water - t_start) * 100 ) / (t_water - t_end)
   uint32_t u32p1_1 = (100 * 100 - ((stData_p.u32Height * 100) / 285) ) - (stData_p.u32StartTemp * 100);
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p1_1 %lu", u32p1_1);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p1_1 %lu", u32p1_1);
   uint32_t u32p1 = u32p1_1 * 100 / ((100 * 100 - ((stData_p.u32Height * 100) / 285) ) - (stData_p.u32EndTemp * 100) ); 
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p1 %lu", u32p1);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p1 %lu", u32p1);
 
   // Part  II: u32p2 = (0,76 * 100 * u32u32p1) 
   uint32_t u32p2_1 = (760 * u32p1) / 10000; 
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p2_1 %lu", u32p2_1);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p2_1 %lu", u32p2_1);
   uint32_t u32p2 = 0;
   if (u32p2_1 < 12) {
     APP_LOG(APP_LOG_LEVEL_WARNING, "Sub p2_1 %lu", u32p2_1);
@@ -93,15 +98,15 @@ static uint32_t calculate_in_min_times_1000(struct Configuration stData_p) {
   } else {
     u32p2 = u32p2_1 - 12;
   }
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p2 %lu", u32p2);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p2 %lu", u32p2);
 
   // Part III: u32p3 = lookup1(u32p2)  
   uint32_t u32p3 = rgu32Lookup1[u32p2];
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p3 %lu", u32p3);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p3 %lu", u32p3);
 
   // Part  IV: u32p4 = lookup2( (weight - 80) / 10)
   uint32_t u32p4_1 = (stData_p.u32Weight / 10);
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4_1 %lu", u32p4_1);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4_1 %lu", u32p4_1);
 
   uint32_t u32p4_2 = 0;
   if (u32p4_1 < 8) {
@@ -113,10 +118,10 @@ static uint32_t calculate_in_min_times_1000(struct Configuration stData_p) {
   } else {
     u32p4_2 = u32p4_1 - 8;
   }
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4_2 %lu", u32p4_2);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4_2 %lu", u32p4_2);
 
   uint32_t u32p4 = rgu32Lookup2[u32p4_2];
-  //APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4 %lu", u32p4);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Sub u32p4 %lu", u32p4);
 
   // Part   V: u32p5 = 0,465 * 100 * u32p4 * u32p3 / 1000
   uint32_t u32p5 = (465 * u32p4 * u32p3) / 1000;

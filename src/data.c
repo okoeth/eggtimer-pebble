@@ -14,6 +14,10 @@
 
 void  configuration_set_values (struct Configuration * pstConfig_p, uint32_t u32Height_p, uint32_t u32Weight_p, uint32_t u32StartTemp_p, uint32_t u32EndTemp_p) {
 	if (pstConfig_p!=NULL) {
+    pstConfig_p->u32Height=u32Height_p;
+    pstConfig_p->u32Weight=u32Weight_p;
+    pstConfig_p->u32StartTemp=u32StartTemp_p;
+    pstConfig_p->u32EndTemp=u32EndTemp_p;
 		if (u32EndTemp_p <= 67) {
 			snprintf(pstConfig_p->szTitle, 32, "Soft - %lug", u32Weight_p);
 		}	

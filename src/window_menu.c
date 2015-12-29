@@ -98,6 +98,10 @@ static void select_callback(MenuLayer *plyr_p, MenuIndex *pidxCell_p, void *pDat
       window_config_create(plyr_p, & (pstData_g->prgstConfig[pstData_g->u16NumConfigs-1]));
       break;
     case 1: // Second section
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Height %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Height);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "StartTemp %lu", pstData_g->prgstConfig[pidxCell_p->row].u32StartTemp);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "EndTemp %lu", pstData_g->prgstConfig[pidxCell_p->row].u32EndTemp);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Weight %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Weight);    
       u32Duration = calculate_in_ms(pstData_g->prgstConfig[pidxCell_p->row]);
       window_timer_create(u32Duration);
       break;
