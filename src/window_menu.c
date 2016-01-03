@@ -20,8 +20,8 @@
 ////////////////////////////////////////////////////////////
 // Menu window
 
-static Window *pwndMenu_g;
-static MenuLayer *plyrMenu_g;
+static Window *pwndMenu_g = NULL;
+static MenuLayer *plyrMenu_g = NULL;
 static struct Data * pstData_g = NULL;
 static uint16_t u16DataRecords_g = 0;
 static struct Configuration stDefaultConfig_g = {"Soft - 120g", "500m / 9C / 62C", 500, 120, 9, 62};
@@ -91,7 +91,7 @@ static void draw_row_callback(GContext* pctx_p, const Layer *plyrCell_p, MenuInd
 // Call back to handle menu item selection
 
 static void select_callback(MenuLayer *plyr_p, MenuIndex *pidxCell_p, void *pData_p) {
-  uint32_t u32Duration = 0;
+  uint32_t u32DurationMillies = 0;
   switch (pidxCell_p->section) {
     case 0: // First section
       data_append_item(pstData_g, & stDefaultConfig_g); 
@@ -101,9 +101,11 @@ static void select_callback(MenuLayer *plyr_p, MenuIndex *pidxCell_p, void *pDat
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Height %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Height);
       APP_LOG(APP_LOG_LEVEL_DEBUG, "StartTemp %lu", pstData_g->prgstConfig[pidxCell_p->row].u32StartTemp);
       APP_LOG(APP_LOG_LEVEL_DEBUG, "EndTemp %lu", pstData_g->prgstConfig[pidxCell_p->row].u32EndTemp);
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Weight %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Weight);    
-      u32Duration = calculate_in_ms(pstData_g->prgstConfig[pidxCell_p->row]);
-      window_timer_create(u32Duration);
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "Weight %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Weight);
+      u32DurationMillies = calculate_in_ms(pstData_g->prgstConfig[pidxCell_p->row]);
+      window_timer_precreate(u32DurationMillies);
+      window_timer_precreate(10000);
+      window_timer_create();
       break;
   }
 }

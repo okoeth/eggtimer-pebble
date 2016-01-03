@@ -22,6 +22,7 @@
 #include "data.h"
 
 #include "window_menu.h"
+#include "window_timer.h"
 
 ////////////////////////////////////////////////////////////
 // Data structure
@@ -49,10 +50,22 @@ static struct Configuration rgstConfig_g [1] = {
 };
 
 int main(void) {
-  struct Data * pstData = data_create();
+  // Test data
   //data_append_items(pstData, rgstConfig_g, NUM_ENTRIES);  
+  
+  // Init
+  struct Data * pstData = data_create();
   window_menu_create(pstData);
+  
+  // If persisted timer state exists, open timer window
+  if (check_timer_state()) {
+    window_timer_create();
+  }
+  
+  // Main loop
   app_event_loop();
+  
+  // De-init
   data_destroy(pstData);
-  window_menu_destroy();
+  window_menu_destroy();  
 }

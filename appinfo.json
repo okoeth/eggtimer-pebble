@@ -9,6 +9,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/aa_egg_timer_icon_bw.png",
+                "menuIcon": true,
+                "name": "AA_MENU_ICON",
+                "type": "png"
+            },
+            {
                 "file": "images/action_icon_select.png",
                 "name": "IMAGE_ACTION_ICON_SELECT",
                 "type": "png"
@@ -29,7 +35,7 @@
     "shortName": "EggTimer",
     "uuid": "3361ece2-a226-462e-8da0-fdee4d38d3fb",
     "versionCode": 1,
-    "versionLabel": "1.0",
+    "versionLabel": "1.1",
     "watchapp": {
         "watchface": false
     }
