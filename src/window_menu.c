@@ -104,7 +104,7 @@ static void select_callback(MenuLayer *plyr_p, MenuIndex *pidxCell_p, void *pDat
       APP_LOG(APP_LOG_LEVEL_DEBUG, "Weight %lu", pstData_g->prgstConfig[pidxCell_p->row].u32Weight);
       u32DurationMillies = calculate_in_ms(pstData_g->prgstConfig[pidxCell_p->row]);
       window_timer_precreate(u32DurationMillies);
-      window_timer_precreate(10000);
+      //window_timer_precreate(10000);
       window_timer_create();
       break;
   }
